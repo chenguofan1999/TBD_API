@@ -14,7 +14,7 @@ const (
 	DATABASE = "tbd"
 )
 
-// DB is the Global DB object
+// DB : 全局的数据库对象
 var DB *sql.DB
 
 // Connect : 连接到数据库
