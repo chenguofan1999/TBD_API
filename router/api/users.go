@@ -9,7 +9,6 @@ import (
 
 func GetUserByName(c *gin.Context) {
 	username := c.Param("username")
-
 	user := model.QueryWithName(username)
 
 	// 没有找到,返回 404 not found

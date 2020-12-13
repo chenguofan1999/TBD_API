@@ -15,14 +15,14 @@ type User struct {
 // CreateUserTableIfNotExists Creates a Users Table If Not Exists
 func CreateUserTableIfNotExists() {
 	sql := `CREATE TABLE IF NOT EXISTS users(
-		id INT NOT NULL AUTO_INCREMENT,
-		username VARCHAR(32),
+		user_id INT NOT NULL AUTO_INCREMENT,
+		username VARCHAR(32) UNIQUE,
 		password VARCHAR(32),
 		bio VARCHAR(64) DEFAULT '',
 		avatar_url VARCHAR(128) DEFAULT '',
 		followerCount INT DEFAULT 0,
 		followingCount INT DEFAULT 0,
-		PRIMARY KEY (id)
+		PRIMARY KEY (user_id)
 		); `
 
 	if _, err := DB.Exec(sql); err != nil {
@@ -49,7 +49,7 @@ func InsertUser(user User) {
 func QueryWithName(username string) *User {
 	user := new(User)
 
-	row := DB.QueryRow("select id,username,bio,avatar_url,followerCount,followingCount from users where username = ?", username)
+	row := DB.QueryRow("select user_id,username,bio,avatar_url,followerCount,followingCount from users where username = ?", username)
 	//注意一一对应
 	err := row.Scan(&user.UserID, &user.Username, &user.Bio, &user.AvatarURL, &user.Followers, &user.Following)
 
