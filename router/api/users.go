@@ -21,3 +21,15 @@ func GetUserByName(c *gin.Context) {
 
 	c.JSON(http.StatusOK, user)
 }
+
+func GetLoginUser(c *gin.Context) {
+	tokenString := c.Request.Header.Get("Authorization")
+	username := GetNameByToken(tokenString)
+	if user := model.QueryWithName(username); user != nil {
+		c.JSON(http.StatusOK, user)
+	} else {
+		c.JSON(http.StatusUnauthorized, gin.H{"status": "unauthorized"})
+	}
+}
+
+
