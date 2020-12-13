@@ -61,3 +61,13 @@ func QueryWithName(username string) *User {
 
 	return user
 }
+
+func QueryPasswordByName(username string) string {
+	row := DB.QueryRow("select password from users where username = ?", username)
+	var password string
+	if err := row.Scan(&password); err == nil {
+		return password
+	} else {
+		return ""
+	}
+}
