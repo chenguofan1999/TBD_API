@@ -9,15 +9,12 @@ import (
 
 func main() {
 
-	// test()
-
-	// model.QueryWithName("Joe")
-
 	router := router.InitRouter()
 	router.Run(":8011")
+
 }
 
-func test() {
+func testData() {
 
 	model.InsertUser(model.User{
 		Username: "Lee",
@@ -50,5 +47,12 @@ func test() {
 	model.InsertFollowRelation(4, 3)
 	model.InsertFollowRelation(2, 1)
 	model.InsertFollowRelation(1, 4)
+
+	model.InsertTextContent("Tom", "Hello", "Hello, world!")
+	model.InsertTextContent("Law", "Hello", "Hello, world!")
+	model.InsertTextContent("Jim", "Hello", "Hello, world!")
+	model.InsertTextContent("Bob", "Hello", "Hello, world!")
+	model.InsertTextContent("Tom", "Foo", "Bar")
+	model.InsertTextContent("Law", "Foo", "Bar")
 
 }

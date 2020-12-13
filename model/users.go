@@ -57,7 +57,7 @@ func QueryWithName(username string) *User {
 		fmt.Printf("scan failed, err:%v\n", err)
 		return nil
 	}
-	fmt.Println("Single row data:", *user)
+	// fmt.Println("Single row data:", *user)
 
 	return user
 }

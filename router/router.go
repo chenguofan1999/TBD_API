@@ -12,9 +12,11 @@ func InitRouter() *gin.Engine {
 	router.GET("/users/:username", api.GetUserByName)
 	router.GET("/users/:username/followers", api.GetFollowersByName)
 	router.GET("/users/:username/following", api.GetFollowingByName)
-	
+
 	router.GET("/user", api.GetLoginUser)
 	router.POST("/login", api.Login)
+	router.GET("/contents/:username", api.GetContentsByName)
+
 	// router.POST("/user", Store)
 	// router.PUT("/user/:id", Update)
 	// router.DELETE("/user/:id", Destroy)

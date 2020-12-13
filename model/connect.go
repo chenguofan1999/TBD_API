@@ -19,7 +19,6 @@ var DB *sql.DB
 
 // Connect : 连接到数据库
 func Connect() {
-
 	dataSourceName := fmt.Sprintf("%s:%s@/%s?charset=utf8", USERNAME, PASSWORD, DATABASE)
 
 	var err error
