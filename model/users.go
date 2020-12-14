@@ -5,7 +5,6 @@ import "fmt"
 type User struct {
 	UserID    int    `json:"UserID" form:"UserID"`
 	Username  string `json:"username" form:"username"`
-	Password  string `json:"password" form:"password"`
 	Bio       string `json:"bio" form:"bio"`
 	AvatarURL string `json:"avatar_url" form:"avatar_url"`
 	Followers int    `json:"followers" form:"followers"`
@@ -20,8 +19,8 @@ func CreateUserTableIfNotExists() {
 		password VARCHAR(32),
 		bio VARCHAR(64) DEFAULT '',
 		avatar_url VARCHAR(128) DEFAULT '',
-		followerCount INT DEFAULT 0,
-		followingCount INT DEFAULT 0,
+		follower_num INT DEFAULT 0,
+		following_num INT DEFAULT 0,
 		PRIMARY KEY (user_id)
 		); `
 
@@ -32,8 +31,9 @@ func CreateUserTableIfNotExists() {
 	fmt.Println("create user table successed or it already exists")
 }
 
-func InsertUser(user User) {
-	result, err := DB.Exec("insert INTO users(username,password) values(?,?)", user.Username, user.Password)
+// InsertUser is for test use
+func InsertUser(username string, password string) {
+	result, err := DB.Exec("insert INTO users(username,password) values(?,?)", username, password)
 	if err != nil {
 		fmt.Printf("Insert data failed,err:%v", err)
 		return
@@ -46,10 +46,10 @@ func InsertUser(user User) {
 	fmt.Println("Insert data id:", lastInsertID)
 }
 
-func QueryWithName(username string) *User {
+func QueryUserWithName(username string) *User {
 	user := new(User)
 
-	row := DB.QueryRow("select user_id,username,bio,avatar_url,followerCount,followingCount from users where username = ?", username)
+	row := DB.QueryRow("select user_id,username,bio,avatar_url,follower_num,following_num from users where username = ?", username)
 	//注意一一对应
 	err := row.Scan(&user.UserID, &user.Username, &user.Bio, &user.AvatarURL, &user.Followers, &user.Following)
 
@@ -57,7 +57,6 @@ func QueryWithName(username string) *User {
 		fmt.Printf("scan failed, err:%v\n", err)
 		return nil
 	}
-	// fmt.Println("Single row data:", *user)
 
 	return user
 }

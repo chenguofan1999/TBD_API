@@ -9,7 +9,7 @@ import (
 
 func GetUserByName(c *gin.Context) {
 	username := c.Param("username")
-	user := model.QueryWithName(username)
+	user := model.QueryUserWithName(username)
 
 	// 没有找到,返回 404 not found
 	if user == nil {
@@ -25,11 +25,9 @@ func GetUserByName(c *gin.Context) {
 func GetLoginUser(c *gin.Context) {
 	tokenString := c.Request.Header.Get("Authorization")
 	username := GetNameByToken(tokenString)
-	if user := model.QueryWithName(username); user != nil {
+	if user := model.QueryUserWithName(username); user != nil {
 		c.JSON(http.StatusOK, user)
 	} else {
 		c.JSON(http.StatusUnauthorized, gin.H{"status": "unauthorized"})
 	}
 }
-
-

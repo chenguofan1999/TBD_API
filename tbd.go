@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-
+	testData()
 	router := router.InitRouter()
 	router.Run(":8011")
 
@@ -16,37 +16,22 @@ func main() {
 
 func testData() {
 
-	model.InsertUser(model.User{
-		Username: "Lee",
-		Password: "678",
-	})
+	model.InsertUser("Lee", "678") // 1
+	model.InsertUser("Law", "678") // 2
+	model.InsertUser("Jim", "678") // 3
+	model.InsertUser("Tom", "678") // 4
+	model.InsertUser("Bob", "678") // 5
 
-	model.InsertUser(model.User{
-		Username: "Law",
-		Password: "678",
-	})
-
-	model.InsertUser(model.User{
-		Username: "Jim",
-		Password: "678",
-	})
-
-	model.InsertUser(model.User{
-		Username: "Tom",
-		Password: "678",
-	})
-
-	model.InsertUser(model.User{
-		Username: "Bob",
-		Password: "678",
-	})
-
-	model.InsertFollowRelation(1, 2)
-	model.InsertFollowRelation(1, 3)
-	model.InsertFollowRelation(2, 3)
-	model.InsertFollowRelation(4, 3)
-	model.InsertFollowRelation(2, 1)
-	model.InsertFollowRelation(1, 4)
+	model.InsertFollowRelationByName("Bob", "Tom")
+	model.InsertFollowRelationByName("Law", "Tom")
+	model.InsertFollowRelationByName("Jim", "Tom")
+	model.InsertFollowRelationByName("Lee", "Tom")
+	model.InsertFollowRelationByName("Law", "Lee")
+	model.InsertFollowRelationByName("Law", "Bob")
+	model.InsertFollowRelationByName("Law", "Jim")
+	model.InsertFollowRelationByName("Jim", "Lee")
+	model.InsertFollowRelationByName("Bob", "Law")
+	model.InsertFollowRelationByName("Bob", "Lee")
 
 	model.InsertTextContent("Tom", "Hello", "Hello, world!")
 	model.InsertTextContent("Law", "Hello", "Hello, world!")

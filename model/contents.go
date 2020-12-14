@@ -54,7 +54,7 @@ func CreateImageTableIfNotExists() {
 
 // InsertContent is for test use
 func InsertTextContent(authorName string, title string, text string) {
-	author := QueryWithName(authorName)
+	author := QueryUserWithName(authorName)
 	author_id := author.UserID
 
 	result, err := DB.Exec("insert into contents(author_id,content_title,content_text) values(?,?,?)", author_id, title, text)
