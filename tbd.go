@@ -1,17 +1,18 @@
 package main
 
 import (
-	"fmt"
 	"tbd/model"
 	_ "tbd/model"
+	"tbd/router"
 	_ "tbd/router"
 )
 
 func main() {
 	testData()
-	// router := router.InitRouter()
-	// router.Run(":8011")
-	fmt.Println(model.QueryReplyWithID(5))
+	router := router.InitRouter()
+	router.Run(":8012")
+	// fmt.Println(model.QueryReplyWithID(5))
+	// fmt.Println(model.QueryAllCommentsWithContentID(2))
 }
 
 func testData() {
