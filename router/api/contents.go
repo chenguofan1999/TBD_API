@@ -19,6 +19,6 @@ func GetContentsByName(c *gin.Context) {
 		return
 	}
 
-	contents := model.QueryContentWithName(username)
+	contents := model.QueryContentsWithName(username)
 	c.JSON(http.StatusOK, contents)
 }

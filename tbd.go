@@ -1,17 +1,17 @@
 package main
 
 import (
+	"fmt"
 	"tbd/model"
 	_ "tbd/model"
-	"tbd/router"
 	_ "tbd/router"
 )
 
 func main() {
 	testData()
-	router := router.InitRouter()
-	router.Run(":8011")
-
+	// router := router.InitRouter()
+	// router.Run(":8011")
+	fmt.Println(model.QueryReplyWithID(5))
 }
 
 func testData() {
@@ -40,4 +40,16 @@ func testData() {
 	model.InsertTextContent("Tom", "Foo", "Bar")
 	model.InsertTextContent("Law", "Foo", "Bar")
 
+	model.InsertComment("Tom", 2, "nice")  // commentID = 1
+	model.InsertComment("Jim", 1, "great") // commentID = 2
+	model.InsertComment("Bob", 3, "fair")  // commentID = 3
+	model.InsertComment("Law", 2, "yep")   // commentID = 4
+
+	model.InsertReply("Jim", 1, "thx") // commentID = 5
+	model.InsertReply("Bob", 1, "na")  // commentID = 6
+	model.InsertReply("Law", 1, "na")  // commentID = 7
+	model.InsertReply("Tom", 1, "na")  // commentID = 8
+
+	model.InsertReply("Tom", 5, "na") // commentID = 8
+	model.InsertReply("Jim", 5, "na") // commentID = 8
 }

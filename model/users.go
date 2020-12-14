@@ -3,12 +3,12 @@ package model
 import "fmt"
 
 type User struct {
-	UserID    int    `json:"UserID" form:"UserID"`
+	UserID    int    `json:"userID" form:"userID"`
 	Username  string `json:"username" form:"username"`
 	Bio       string `json:"bio" form:"bio"`
-	AvatarURL string `json:"avatar_url" form:"avatar_url"`
-	Followers int    `json:"followers" form:"followers"`
-	Following int    `json:"following" form:"following"`
+	AvatarURL string `json:"avatar" form:"avatar"`
+	Followers int    `json:"followerNum" form:"followerNum"`
+	Following int    `json:"followingNum" form:"followingNum"`
 }
 
 // CreateUserTableIfNotExists Creates a Users Table If Not Exists

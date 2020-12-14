@@ -1,17 +1,21 @@
 package model
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 type MiniUser struct {
 	Username  string `json:"username" form:"username"`
 	Bio       string `json:"bio" form:"bio"`
-	AvatarURL string `json:"avatar_url" form:"avatar_url"`
+	AvatarURL string `json:"avatar" form:"avatar"`
 }
 
 type Content struct {
 	ContentID int      `json:"contentID" form:"contentID"`
 	Title     string   `json:"title" form:"title"`
 	Text      string   `json:"text" form:"text"`
+	Time      int64    `json:"createTime" form:"createTime"`
 	Author    MiniUser `json:"author" form:"author"`
 	Images    []string `json:"images" form:"images"`
 }
@@ -23,6 +27,7 @@ func CreateContentTableIfNotExists() {
 		author_id INT,
 		content_title TINYTEXT,
 		content_text TEXT,
+		create_time BIGINT,
 		like_num INT DEFAULT 0,
 		comment_num INT DEFAULT 0,
 		image_num INT DEFAULT 0,
@@ -34,7 +39,7 @@ func CreateContentTableIfNotExists() {
 		fmt.Println("Create content table failed", err)
 		return
 	}
-	fmt.Println("Create user table successed or it already exists")
+	fmt.Println("Create content table successed or it already exists")
 }
 
 func CreateImageTableIfNotExists() {
@@ -57,7 +62,7 @@ func InsertTextContent(authorName string, title string, text string) {
 	author := QueryUserWithName(authorName)
 	author_id := author.UserID
 
-	result, err := DB.Exec("insert into contents(author_id,content_title,content_text) values(?,?,?)", author_id, title, text)
+	result, err := DB.Exec("insert into contents(author_id,content_title,content_text,create_time) values(?,?,?,?)", author_id, title, text, time.Now().Unix())
 	if err != nil {
 		fmt.Printf("Insert data failed,err:%v", err)
 		return
@@ -71,17 +76,16 @@ func InsertTextContent(authorName string, title string, text string) {
 	fmt.Println("Insert content id:", lastInsertID)
 }
 
-func QueryContentWithName(authorName string) []Content {
+func QueryContentsWithName(authorName string) []Content {
 	contents := make([]Content, 0)
-	rows, err := DB.Query("select content_id,content_title,content_text,username,bio,avatar_url from contents,users where author_id = user_id and username = ?", authorName)
-
+	rows, err := DB.Query("select content_id,content_title,content_text,create_time,username,bio,avatar_url from contents,users where author_id = user_id and username = ?", authorName)
 	if err != nil {
 		panic(err)
 	}
 
 	for rows.Next() {
 		var content Content
-		err = rows.Scan(&content.ContentID, &content.Title, &content.Text, &content.Author.Username, &content.Author.Bio, &content.Author.AvatarURL)
+		err = rows.Scan(&content.ContentID, &content.Title, &content.Text, &content.Time, &content.Author.Username, &content.Author.Bio, &content.Author.AvatarURL)
 		if err != nil {
 			panic(err)
 		}
