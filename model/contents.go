@@ -137,3 +137,12 @@ func QueryContentWithContentID(contentID int) *Content {
 	content.Images = imageURLs
 	return content
 }
+
+// DeleteContentWithContentID 删除一条内容，级联删除其所有评论
+func DeleteContentWithContentID(contentID int) error {
+	_, err := DB.Exec(`delete from contents where content_id = ?`, contentID)
+	if err != nil {
+		return errors.New("Content May Not Exist")
+	}
+	return nil
+}

@@ -12,7 +12,7 @@ func InitRouter() *gin.Engine {
 
 	router.StaticFS("/static", http.Dir("./static"))
 
-	router.GET("/users/:username", api.GetUserByName)
+	router.GET("/users/:username", api.GetUserInfoByName)
 	router.GET("/users/:username/followers", api.GetFollowersByName)
 	router.GET("/users/:username/following", api.GetFollowingByName)
 
@@ -33,8 +33,11 @@ func InitRouter() *gin.Engine {
 	router.DELETE("/user/following/:username", api.UnfollowUser)
 
 	router.POST("/contents", api.PostContent)
+	router.DELETE("/contents/:contentID", api.DeleteContent)
+
 	router.POST("/comments", api.PostComment)
 	router.POST("/replies", api.PostReply)
+	router.DELETE("/comments/:commentID", api.DeleteComment)
 
 	// router.POST("/user", Store)
 	// router.PUT("/user/:id", Update)

@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GetUserByName(c *gin.Context) {
+func GetUserInfoByName(c *gin.Context) {
 	username := c.Param("username")
 	user := model.QueryUserWithName(username)
 

@@ -94,3 +94,43 @@ func PostContent(c *gin.Context) {
 		"newContent": model.QueryContentWithContentID(contentID),
 	})
 }
+
+// DeleteContent : 删除内容，在 URL 的 Path 中写入 contentID
+func DeleteContent(c *gin.Context) {
+	// 得到登录用户名
+	tokenString := c.Request.Header.Get("Authorization")
+	if tokenString == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"status": "unauthorized"})
+		return
+	}
+	loginUserName := GetNameByToken(tokenString)
+
+	// 获取 URL 中 contentID 并验证格式是否正确
+	contentID, err := strconv.Atoi(c.Param("contentID"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"status": "Bad Request"})
+		return
+	}
+
+	// 验证 content 是否存在，存在即获取
+	content := model.QueryContentWithContentID(contentID)
+	if content == nil {
+		c.JSON(http.StatusNotFound, gin.H{"status": "Bad Request"})
+		return
+	}
+
+	// 验证是否为该用户所发
+	if content.Author.Username != loginUserName {
+		c.JSON(http.StatusForbidden, gin.H{"status": "Forbidden"})
+		return
+	}
+
+	// 执行删除
+	err = model.DeleteContentWithContentID(contentID)
+	if err != nil {
+		c.JSON(http.StatusForbidden, gin.H{"status": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "success"})
+}

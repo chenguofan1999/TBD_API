@@ -87,6 +87,7 @@ func InsertReply(username string, replyTo int, text string) error {
 	if err != nil {
 		return errors.New("reply to nobody")
 	}
+	DB.Exec("update contents set comment_num=comment_num+1 where content_id = ?", contentID)
 	return nil
 }
 
@@ -131,7 +132,7 @@ func QueryCommentWithCommentID(commentID int) *GeneralComment {
 	err := row.Scan(&comment.CommentID, &comment.ContentID, &nullableReplyTo, &comment.Text, &comment.Time,
 		&comment.Creator.Username, &comment.Creator.Bio, &comment.Creator.AvatarURL)
 	if err != nil {
-		panic(err)
+		return nil
 	}
 
 	if nullableReplyTo.Valid {
@@ -203,4 +204,23 @@ func QueryCommentsWithContentID(contentID int) []GeneralComment {
 		}
 	}
 	return comments
+}
+
+// DeleteCommentWithCommentID Delete Comment With CommentID
+func DeleteCommentWithCommentID(commentID int) error {
+	result, err := DB.Exec(`delete from comments where comment_id = ?`, commentID)
+	if err != nil {
+		return errors.New("comment may not exist")
+	}
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return errors.New("comment may not exist")
+	}
+
+	contentID := QueryContentIDwithCommentID(commentID)
+	_, err = DB.Exec("update contents set comment_num=comment_num-1 where content_id = ?", contentID)
+	if err != nil {
+		return errors.New("counter decrement failed")
+	}
+	return nil
 }

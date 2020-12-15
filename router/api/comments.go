@@ -138,3 +138,44 @@ func PostReply(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"status": "success"})
 }
+
+// DeleteComment : 删除Comment，在 URL 的 Path 中写入 commentID
+func DeleteComment(c *gin.Context) {
+	// 得到登录用户名
+	tokenString := c.Request.Header.Get("Authorization")
+	if tokenString == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"status": "unauthorized"})
+		return
+	}
+	loginUserName := GetNameByToken(tokenString)
+
+	// 获取 URL 中 commentID 并验证格式是否正确
+	commentID, err := strconv.Atoi(c.Param("commentID"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"status": "Bad Request"})
+		return
+	}
+
+	// 验证 comment 是否存在，存在即获取
+	comment := model.QueryCommentWithCommentID(commentID)
+	if comment == nil {
+		c.JSON(http.StatusNotFound, gin.H{"status": "Bad Request"})
+		return
+	}
+
+	// 验证是否为该用户所发
+	if comment.Creator.Username != loginUserName {
+		c.JSON(http.StatusForbidden, gin.H{"status": "Forbidden"})
+		return
+	}
+
+	// 执行删除
+	err = model.DeleteCommentWithCommentID(commentID)
+	if err != nil {
+		c.JSON(http.StatusForbidden, gin.H{"status": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "success"})
+
+}
