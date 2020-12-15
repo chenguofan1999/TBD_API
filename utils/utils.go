@@ -23,7 +23,7 @@ func GenerateRandomFileName(fileName string) string {
 func randString(len int) string {
 	bytes := make([]byte, len)
 	for i := 0; i < len; i++ {
-		b := r.Intn(26) + 65
+		b := r.Intn(26) + 97
 		bytes[i] = byte(b)
 	}
 	return string(bytes)

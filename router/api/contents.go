@@ -22,7 +22,14 @@ func GetContentsByName(c *gin.Context) {
 		return
 	}
 
-	contents := model.QueryContentsWithName(username)
+	contents, err := model.QueryContentsWithName(username)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "not found",
+		})
+		return
+	}
+
 	c.JSON(http.StatusOK, contents)
 }
 
