@@ -11,7 +11,7 @@ func CreateImageTableIfNotExists() {
 		image_url VARCHAR(256),
 		content_id INT NOT NULL,
 		PRIMARY KEY (image_id),
-		FOREIGN KEY (content_id) REFERENCES contents(content_id)
+		FOREIGN KEY (content_id) REFERENCES contents(content_id) ON DELETE CASCADE
 		); `
 	if _, err := DB.Exec(sql); err != nil {
 		fmt.Println("Create image table failed", err)

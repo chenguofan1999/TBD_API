@@ -2,6 +2,7 @@ package model
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 )
@@ -54,10 +55,10 @@ func CreateCommentTableIfNotExists() {
 		comment_text TEXT,
 		create_time BIGINT,
 		PRIMARY KEY (comment_id),
-		FOREIGN KEY (commenter_id) REFERENCES users(user_id),
-		FOREIGN KEY (content_id) REFERENCES contents(content_id),
-		FOREIGN KEY (reply_to) REFERENCES comments(comment_id)
-		); `
+		FOREIGN KEY (commenter_id) REFERENCES users(user_id) ON UPDATE CASCADE,
+		FOREIGN KEY (content_id) REFERENCES contents(content_id) ON DELETE CASCADE,
+		FOREIGN KEY (reply_to) REFERENCES comments(comment_id) ON DELETE CASCADE
+		)ENGINE=InnoDB DEFAULT CHARSET=utf8; `
 
 	if _, err := DB.Exec(sql); err != nil {
 		fmt.Println("Create comment table failed", err)
@@ -66,39 +67,27 @@ func CreateCommentTableIfNotExists() {
 	fmt.Println("Create comment table successed or it already exists")
 }
 
-// InsertComment is for test use
-func InsertComment(username string, contentID int, text string) {
+// InsertComment requires username, contentID and text
+func InsertComment(username string, contentID int, text string) error {
 	commenterID := QueryUserWithName(username).UserID
-	result, err := DB.Exec("insert into comments(commenter_id,content_id,comment_text,create_time) values(?,?,?,?)", commenterID, contentID, text, time.Now().Unix())
+	_, err := DB.Exec("insert into comments(commenter_id,content_id,comment_text,create_time) values(?,?,?,?)", commenterID, contentID, text, time.Now().Unix())
 	if err != nil {
-		fmt.Printf("Insert data failed,err:%v", err)
-		return
+		return errors.New("contentID may not exist")
 	}
+	DB.Exec("update contents set comment_num=comment_num+1 where content_id = ?", contentID)
 
-	lastInsertID, err := result.LastInsertId() //获取插入数据的自增ID
-	if err != nil {
-		fmt.Printf("Get insert id failed,err:%v", err)
-		return
-	}
-	fmt.Println("Insert comment id:", lastInsertID)
+	return nil
 }
 
-// InsertReply is for test use
-func InsertReply(username string, replyTo int, text string) {
+// InsertReply requires username, commentID and text
+func InsertReply(username string, replyTo int, text string) error {
 	commenterID := QueryUserWithName(username).UserID
 	contentID := QueryContentIDwithCommentID(replyTo)
-	result, err := DB.Exec("insert into comments(commenter_id,content_id,reply_to,comment_text,create_time) values(?,?,?,?,?)", commenterID, contentID, replyTo, text, time.Now().Unix())
+	_, err := DB.Exec("insert into comments(commenter_id,content_id,reply_to,comment_text,create_time) values(?,?,?,?,?)", commenterID, contentID, replyTo, text, time.Now().Unix())
 	if err != nil {
-		fmt.Printf("Insert data failed,err:%v", err)
-		return
+		return errors.New("reply to nobody")
 	}
-
-	lastInsertID, err := result.LastInsertId() //获取插入数据的自增ID
-	if err != nil {
-		fmt.Printf("Get insert id failed,err:%v", err)
-		return
-	}
-	fmt.Println("Insert comment id:", lastInsertID, "(a reply)")
+	return nil
 }
 
 // QueryContentIDwithCommentID 根据 commentID 得到对应的 content 的 contentID

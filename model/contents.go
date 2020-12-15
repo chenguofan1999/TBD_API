@@ -109,6 +109,7 @@ func QueryContentsWithName(authorName string) []Content {
 	return contents
 }
 
+// QueryContentWithContentID Query a Content With ContentID
 func QueryContentWithContentID(contentID int) *Content {
 	content := new(Content)
 	row := DB.QueryRow("select content_id,content_title,content_text,create_time,username,bio,avatar_url from contents,users where author_id = user_id and content_id = ?", contentID)

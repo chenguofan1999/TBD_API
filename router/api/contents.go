@@ -50,7 +50,7 @@ type TextContent struct {
 	Text  string `json:"text" form:"text"`
 }
 
-func PostTextContent(c *gin.Context) {
+func PostContent(c *gin.Context) {
 	// 得到登录用户名
 	tokenString := c.Request.Header.Get("Authorization")
 	if tokenString == "" {

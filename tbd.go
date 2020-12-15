@@ -34,8 +34,8 @@ func testData() {
 	model.InsertFollowRelationByName("Bob", "Law")
 	model.InsertFollowRelationByName("Bob", "Lee")
 
-	model.InsertContent("Tom", "Hello", "Hello, world!", []string{"www.github.com", "www.google.com"})
-	model.InsertContent("Law", "Hello", "Hello, world!", []string{})
+	model.InsertContent("Tom", "Hello", "Hello, world!", []string{"static/images/Yosemite-Color-Block.png"})
+	model.InsertContent("Law", "Hello", "Hello, world!", []string{"static/images/Yosemite.png", "static/images/Backgrounds.png"})
 	model.InsertContent("Jim", "Hello", "Hello, world!", []string{})
 	model.InsertContent("Bob", "Hello", "Hello, world!", []string{})
 	model.InsertContent("Tom", "Foo", "Bar", []string{})

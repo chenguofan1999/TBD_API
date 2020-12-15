@@ -45,6 +45,7 @@ func GetCommentsByContentIDandFilter(c *gin.Context) {
 
 }
 
+// GetCommentByCommentID Get a Comment By CommentID
 func GetCommentByCommentID(c *gin.Context) {
 	commentID, err := strconv.Atoi(c.Param("commentID"))
 	if err != nil {
@@ -65,6 +66,7 @@ func GetCommentByCommentID(c *gin.Context) {
 	c.JSON(http.StatusOK, comment)
 }
 
+// GetRepliesByCommentID Get Replies By CommentID
 func GetRepliesByCommentID(c *gin.Context) {
 	// 获取 commentID
 	// 如果参数不能被转换为整型 ID, 返回400
@@ -78,4 +80,61 @@ func GetRepliesByCommentID(c *gin.Context) {
 
 	comments := model.QueryRepliesWithCommentID(commentID)
 	c.JSON(http.StatusOK, comments)
+}
+
+type postCommentFormat struct {
+	ContentID int    `json:"contentID" form:"contentID"`
+	Text      string `json:"text" form:"text"`
+}
+
+// PostComment : 当前用户发布一条评论(评论一条content)
+func PostComment(c *gin.Context) {
+	// 得到登录用户名
+	tokenString := c.Request.Header.Get("Authorization")
+	if tokenString == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"status": "unauthorized"})
+		return
+	}
+	loginUserName := GetNameByToken(tokenString)
+
+	var input postCommentFormat
+	if err := c.BindJSON(&input); err != nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": "bind error"})
+		return
+	}
+
+	if err := model.InsertComment(loginUserName, input.ContentID, input.Text); err != nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "success"})
+}
+
+type postReplyFormat struct {
+	ReplyTo int    `json:"replyTo" form:"replyTo"`
+	Text    string `json:"text" form:"text"`
+}
+
+// PostReply : 当前用户发表一条回复(回复一条 Comment)
+func PostReply(c *gin.Context) {
+	// 得到登录用户名
+	tokenString := c.Request.Header.Get("Authorization")
+	if tokenString == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"status": "unauthorized"})
+		return
+	}
+	loginUserName := GetNameByToken(tokenString)
+
+	var input postReplyFormat
+	if err := c.BindJSON(&input); err != nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": "bind error"})
+		return
+	}
+	if err := model.InsertReply(loginUserName, input.ReplyTo, input.Text); err != nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "success"})
 }
