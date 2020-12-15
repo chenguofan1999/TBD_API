@@ -25,9 +25,11 @@ func InitRouter() *gin.Engine {
 	router.GET("/comments/:commentID", api.GetCommentByCommentID)
 	router.GET("/comments", api.GetCommentsByContentIDandFilter)
 
-	router.GET("/replies/:commentID", api.GetRepliesByCommentID)
+	router.GET("/replies/:commentID", api.GetRepliesByCommentID) // todo: -> /comments/
 
 	// Following API based on current login user, please include a token in request header
+	router.PUT("/user/info/bio", api.UpdateUserBio)
+	router.PUT("/user/info/avatar", api.UpdateUserAvatar)
 	router.GET("/user", api.GetLoginUser)
 	router.PUT("/user/following/:username", api.FollowUser)
 	router.DELETE("/user/following/:username", api.UnfollowUser)
@@ -36,7 +38,7 @@ func InitRouter() *gin.Engine {
 	router.DELETE("/contents/:contentID", api.DeleteContent)
 
 	router.POST("/comments", api.PostComment)
-	router.POST("/replies", api.PostReply)
+	router.POST("/replies", api.PostReply) // todo:
 	router.DELETE("/comments/:commentID", api.DeleteComment)
 
 	// router.POST("/user", Store)

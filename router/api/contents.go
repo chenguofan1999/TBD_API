@@ -69,7 +69,7 @@ func PostContent(c *gin.Context) {
 
 	imageNum := model.QueryMaxImageID()
 	imageURLs := make([]string, 0)
-	imageFiles := form.File["imageFiles"]
+	imageFiles := form.File["images"]
 
 	for _, file := range imageFiles {
 		imageNum++

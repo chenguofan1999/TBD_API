@@ -1,8 +1,10 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"tbd/model"
+	"tbd/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -47,6 +49,69 @@ func CreateNewUser(c *gin.Context) {
 
 	if err := model.InsertUser(info.Username, info.Password); err != nil {
 		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "success"})
+}
+
+type bioInfo struct {
+	Bio string `json:"bio" form:"bio"`
+}
+
+func UpdateUserBio(c *gin.Context) {
+	// 得到登录用户 userID
+	tokenString := c.Request.Header.Get("Authorization")
+	if tokenString == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"status": "unauthorized"})
+		return
+	}
+	loginUserName := GetNameByToken(tokenString)
+	userID := model.QueryUserIDWithName(loginUserName)
+
+	// 获取 JSON 中的参数
+	var info bioInfo
+	if err := c.BindJSON(&info); err != nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": "bind error"})
+		return
+	}
+
+	if err := model.UpdateBio(userID, info.Bio); err != nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "success"})
+}
+
+func UpdateUserAvatar(c *gin.Context) {
+	// 得到登录用户 userID
+	tokenString := c.Request.Header.Get("Authorization")
+	if tokenString == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"status": "unauthorized"})
+		return
+	}
+	loginUserName := GetNameByToken(tokenString)
+	userID := model.QueryUserIDWithName(loginUserName)
+
+	// 读取文件
+	imageFile, err := c.FormFile("avatar")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "expected Form-data"})
+	}
+
+	// 生成文件存储路径
+	filePath := fmt.Sprintf("static/avatars/%s", utils.GenerateRandomFileName(imageFile.Filename))
+
+	// 保存
+	if err = c.SaveUploadedFile(imageFile, filePath); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "upload error"})
+		return
+	}
+
+	// 更新 UserInfo
+	if err = model.UpdateAvatar(userID, filePath); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 

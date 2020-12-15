@@ -62,7 +62,6 @@ func QueryUserWithName(username string) *User {
 	err := row.Scan(&user.UserID, &user.Username, &user.Bio, &user.AvatarURL, &user.Followers, &user.Following)
 
 	if err != nil {
-		fmt.Printf("scan failed, err:%v\n", err)
 		return nil
 	}
 
@@ -72,9 +71,37 @@ func QueryUserWithName(username string) *User {
 func QueryPasswordByName(username string) string {
 	row := DB.QueryRow("select password from users where username = ?", username)
 	var password string
-	if err := row.Scan(&password); err == nil {
-		return password
-	} else {
+	if err := row.Scan(&password); err != nil {
 		return ""
 	}
+	return password
+}
+
+func QueryUserIDWithName(username string) int {
+	row := DB.QueryRow("select user_id from users where username = ?", username)
+	var userID int
+	if err := row.Scan(&userID); err != nil {
+		return 0
+	}
+	return userID
+}
+
+func UpdateBio(userID int, newBio string) error {
+	result, _ := DB.Exec("update users set bio = ? where user_id = ?", newBio, userID)
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return errors.New("user may not exist")
+	}
+	return nil
+}
+
+func UpdateAvatar(userID int, newAvatarURL string) error {
+	result, _ := DB.Exec("update users set avatar_url = ? where user_id = ?", newAvatarURL, userID)
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return errors.New("user may not exist")
+	}
+	return nil
 }
