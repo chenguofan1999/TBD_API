@@ -31,3 +31,24 @@ func GetLoginUser(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"status": "unauthorized"})
 	}
 }
+
+/*
+type LoginInfo struct {
+	Username  string `json:"username" form:"username"`
+	Password  string `json:"password" form:"password"`
+}
+*/
+func CreateNewUser(c *gin.Context) {
+	var info LoginInfo
+	if err := c.BindJSON(&info); err != nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": "bind error"})
+		return
+	}
+
+	if err := model.InsertUser(info.Username, info.Password); err != nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "success"})
+}

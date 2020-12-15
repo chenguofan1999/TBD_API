@@ -1,6 +1,9 @@
 package model
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 type Follow struct {
 	FollowerID int `json:"followerID" form:"followerID"`
@@ -23,30 +26,29 @@ func CreateFollowTableIfNotExists() {
 	fmt.Println("create Follow table successed or it already exists")
 }
 
-// InsertFollowRelation 用于测试
-func InsertFollowRelation(followerID int, followedID int) {
+// InsertFollowRelation ：用户ID为 followerID 的用户 follow 用户ID为 followedID 的用户
+func InsertFollowRelation(followerID int, followedID int) error {
 	_, err := DB.Exec("insert INTO follow(follower_id,followed_id) values(?,?)", followerID, followedID)
 	if err != nil {
-		fmt.Printf("Insert data failed, err:%v", err)
-		return
+		return errors.New("Target user not exists or duplicate operation")
 	}
 
 	_, err = DB.Exec("update users set follower_num=follower_num+1 where user_id=?", followedID)
 	if err != nil {
-		fmt.Printf("Increment follower_num failed, err:%v", err)
-		return
+		return err
 	}
 
 	_, err = DB.Exec("update users set following_num=following_num+1 where user_id=?", followerID)
 	if err != nil {
-		fmt.Printf("Increment following_num failed, err:%v", err)
-		return
+		return err
 	}
 
 	fmt.Println(followerID, "follows", followedID)
+	return nil
 }
 
-func InsertFollowRelationByName(followerName string, followedName string) {
+// InsertFollowRelationByName : 用户名为 followerName 的用户 follow 用户名为 followedName 的用户
+func InsertFollowRelationByName(followerName string, followedName string) error {
 	var followerID int
 	var followedID int
 
@@ -56,21 +58,66 @@ func InsertFollowRelationByName(followerName string, followedName string) {
 	row = DB.QueryRow("select user_id from users where username = ?", followedName)
 	row.Scan(&followedID)
 
-	InsertFollowRelation(followerID, followedID)
+	return InsertFollowRelation(followerID, followedID)
 }
 
+// DeleteFollowRelation ：用户ID为 followerID 的用户 unfollow 用户ID为 followedID 的用户
+func DeleteFollowRelation(followerID int, followedID int) error {
+	result, err := DB.Exec("delete from follow where follower_id = ? and followed_id = ?", followerID, followedID)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return errors.New("Target user not exists or duplicate operation")
+	}
+
+	_, err = DB.Exec("update users set follower_num=follower_num-1 where user_id=?", followedID)
+	if err != nil {
+		return err
+	}
+
+	_, err = DB.Exec("update users set following_num=following_num-1 where user_id=?", followerID)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(followerID, "unfollows", followedID)
+	return nil
+}
+
+// DeleteFollowRelationByName : 用户名为 followerName 的用户 unfollow 用户名为 followedName 的用户
+func DeleteFollowRelationByName(followerName string, followedName string) error {
+	var followerID int
+	var followedID int
+
+	row := DB.QueryRow("select user_id from users where username = ?", followerName)
+	row.Scan(&followerID)
+
+	row = DB.QueryRow("select user_id from users where username = ?", followedName)
+	row.Scan(&followedID)
+
+	return DeleteFollowRelation(followerID, followedID)
+}
+
+// QueryFollowersWithName : 根据用户名查询关注者
 func QueryFollowersWithName(username string) []User {
 	followers := make([]User, 0)
 
-	follower_ids, err := DB.Query("select follower_id from users,follow where user_id = followed_id and username = ?", username)
+	followerIDs, err := DB.Query("select follower_id from users,follow where user_id = followed_id and username = ?", username)
 
 	if err != nil {
 		panic(err)
 	}
 
-	for follower_ids.Next() {
+	for followerIDs.Next() {
 		var user User
-		err = follower_ids.Scan(&user.UserID)
+		err = followerIDs.Scan(&user.UserID)
 		row := DB.QueryRow("select username,bio,avatar_url,follower_num,following_num from users where user_id = ?", user.UserID)
 		row.Scan(&user.Username, &user.Bio, &user.AvatarURL, &user.Followers, &user.Following)
 		followers = append(followers, user)
@@ -79,6 +126,7 @@ func QueryFollowersWithName(username string) []User {
 	return followers
 }
 
+// QueryFollowingWithName : 根据用户名查询TA关注的人
 func QueryFollowingWithName(username string) []User {
 	followers := make([]User, 0)
 

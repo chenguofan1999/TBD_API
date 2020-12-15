@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"fmt"
 	"time"
 )
@@ -42,38 +43,35 @@ func CreateContentTableIfNotExists() {
 	fmt.Println("Create content table successed or it already exists")
 }
 
-func CreateImageTableIfNotExists() {
-	sql := `CREATE TABLE IF NOT EXISTS images(
-		image_id INT NOT NULL AUTO_INCREMENT,
-		image_url VARCHAR(256),
-		content_id INT NOT NULL,
-		PRIMARY KEY (image_id),
-		FOREIGN KEY (content_id) REFERENCES contents(content_id)
-		); `
-	if _, err := DB.Exec(sql); err != nil {
-		fmt.Println("Create image table failed", err)
-		return
-	}
-	fmt.Println("Create image table successed or it already exists")
-}
-
-// InsertContent is for test use
-func InsertTextContent(authorName string, title string, text string) {
+// InsertContent :...
+func InsertContent(authorName string, title string, text string, imageURLs []string) (int, error) {
 	author := QueryUserWithName(authorName)
-	author_id := author.UserID
-
-	result, err := DB.Exec("insert into contents(author_id,content_title,content_text,create_time) values(?,?,?,?)", author_id, title, text, time.Now().Unix())
-	if err != nil {
-		fmt.Printf("Insert data failed,err:%v", err)
-		return
+	if author == nil {
+		return 0, errors.New("no such user")
 	}
 
-	lastInsertID, err := result.LastInsertId() //获取插入数据的自增ID
+	authorID := author.UserID
+	result, err := DB.Exec("insert into contents(author_id,content_title,content_text,create_time) values(?,?,?,?)", authorID, title, text, time.Now().Unix())
 	if err != nil {
-		fmt.Printf("Get insert id failed,err:%v", err)
-		return
+		return 0, errors.New("create text content error")
 	}
-	fmt.Println("Insert content id:", lastInsertID)
+
+	contentID, _ := result.LastInsertId() //获取插入数据的自增ID
+
+	// imageURLs 是一个 imageURL 的切片
+	for _, imageURL := range imageURLs {
+		_, err := DB.Exec("insert into images(content_id,image_url) values(?,?)", int(contentID), imageURL)
+		if err != nil {
+			return 0, errors.New("insert image failed")
+		}
+
+		_, err = DB.Exec("update contents set image_num=image_num+1 where content_id = ?", int(contentID))
+		if err != nil {
+			return 0, errors.New("insert image failed")
+		}
+	}
+
+	return int(contentID), nil
 }
 
 func QueryContentsWithName(authorName string) []Content {
@@ -119,5 +117,22 @@ func QueryContentWithContentID(contentID int) *Content {
 	if err != nil {
 		panic(err)
 	}
+
+	imageRows, err := DB.Query("select image_url from images where content_id = ?", contentID)
+	if err != nil {
+		panic(err)
+	}
+
+	imageURLs := make([]string, 0)
+	for imageRows.Next() {
+		var imageURL string
+		err = imageRows.Scan(&imageURL)
+		if err != nil {
+			panic(err)
+		}
+
+		imageURLs = append(imageURLs, imageURL)
+	}
+	content.Images = imageURLs
 	return content
 }

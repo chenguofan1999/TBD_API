@@ -1,6 +1,7 @@
 package router
 
 import (
+	"net/http"
 	"tbd/router/api"
 
 	"github.com/gin-gonic/gin"
@@ -9,12 +10,12 @@ import (
 func InitRouter() *gin.Engine {
 	router := gin.Default()
 
-	router.GET("/user", api.GetLoginUser)
-	router.GET("/user/:username", api.GetUserByName)
+	router.GET("/users/:username", api.GetUserByName)
 	router.GET("/users/:username/followers", api.GetFollowersByName)
 	router.GET("/users/:username/following", api.GetFollowingByName)
 
 	router.POST("/login", api.Login)
+	router.POST("/signup", api.CreateNewUser)
 
 	router.GET("/contents/:contentID", api.GetContentByContentID)
 	router.GET("/contents", api.GetContentsByName)
@@ -23,6 +24,14 @@ func InitRouter() *gin.Engine {
 	router.GET("/comments", api.GetCommentsByContentIDandFilter)
 
 	router.GET("/replies/:commentID", api.GetRepliesByCommentID)
+
+	// Following API based on current login user, please include a token in request header
+	router.GET("/user", api.GetLoginUser)
+	router.PUT("/user/following/:username", api.FollowUser)
+	router.DELETE("/user/following/:username", api.UnfollowUser)
+
+	router.POST("/contents", api.PostTextContent)
+	router.StaticFS("/static", http.Dir("./static"))
 
 	// router.POST("/user", Store)
 	// router.PUT("/user/:id", Update)

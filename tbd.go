@@ -34,12 +34,12 @@ func testData() {
 	model.InsertFollowRelationByName("Bob", "Law")
 	model.InsertFollowRelationByName("Bob", "Lee")
 
-	model.InsertTextContent("Tom", "Hello", "Hello, world!")
-	model.InsertTextContent("Law", "Hello", "Hello, world!")
-	model.InsertTextContent("Jim", "Hello", "Hello, world!")
-	model.InsertTextContent("Bob", "Hello", "Hello, world!")
-	model.InsertTextContent("Tom", "Foo", "Bar")
-	model.InsertTextContent("Law", "Foo", "Bar")
+	model.InsertContent("Tom", "Hello", "Hello, world!", []string{"www.github.com", "www.google.com"})
+	model.InsertContent("Law", "Hello", "Hello, world!", []string{})
+	model.InsertContent("Jim", "Hello", "Hello, world!", []string{})
+	model.InsertContent("Bob", "Hello", "Hello, world!", []string{})
+	model.InsertContent("Tom", "Foo", "Bar", []string{})
+	model.InsertContent("Law", "Foo", "Bar", []string{})
 
 	model.InsertComment("Tom", 2, "nice")  // commentID = 1
 	model.InsertComment("Jim", 1, "great") // commentID = 2

@@ -1,6 +1,9 @@
 package model
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 type User struct {
 	UserID    int    `json:"userID" form:"userID"`
@@ -32,18 +35,23 @@ func CreateUserTableIfNotExists() {
 }
 
 // InsertUser is for test use
-func InsertUser(username string, password string) {
+func InsertUser(username string, password string) error {
+	if username == "" || password == "" {
+		return errors.New("Invalid string")
+	}
+
 	result, err := DB.Exec("insert INTO users(username,password) values(?,?)", username, password)
 	if err != nil {
 		fmt.Printf("Insert data failed,err:%v", err)
-		return
+		return errors.New("User exists")
 	}
 	lastInsertID, err := result.LastInsertId() //获取插入数据的自增ID
 	if err != nil {
 		fmt.Printf("Get insert id failed,err:%v", err)
-		return
 	}
+
 	fmt.Println("Insert data id:", lastInsertID)
+	return nil
 }
 
 func QueryUserWithName(username string) *User {

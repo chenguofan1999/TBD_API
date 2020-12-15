@@ -6,6 +6,44 @@ import (
 	"time"
 )
 
+// GeneralComment 可同时表示 Comment 或 Reply
+type GeneralComment struct {
+	CommentID int      `json:"commentID" form:"commentID"`
+	ContentID int      `json:"contentID" form:"contentID"`
+	IsReply   bool     `json:"isReply" form:"isReply"`
+	ReplyTo   int      `json:"replyTo" form:"replyTo"`
+	Text      string   `json:"text" form:"text"`
+	Time      int64    `json:"createTime" form:"createTime"`
+	Creator   MiniUser `json:"creator" form:"creator"`
+}
+
+/*
+type MiniUser struct {
+	Username  string `json:"username" form:"username"`
+	Bio       string `json:"bio" form:"bio"`
+	AvatarURL string `json:"avatar_url" form:"avatar_url"`
+}
+
+
+// Comment means only the direct comment of a content
+type Comment struct {
+	CommentID int      `json:"commentID" form:"commentID"`
+	ContentID int      `json:"contentID" form:"contentID"`
+	Text      string   `json:"text" form:"text"`
+	Time      int64    `json:"createTime" form:"createTime"`
+	Commenter MiniUser `json:"commenter" form:"commenter"`
+}
+
+// Reply is a reply to a comment or another Reply
+type Reply struct {
+	CommentID int      `json:"commentID" form:"commentID"`
+	ReplyTo   int      `json:"replyTo" form:"replyTo"`
+	Text      string   `json:"text" form:"text"`
+	Time      int64    `json:"createTime" form:"createTime"`
+	Replier   MiniUser `json:"replier" form:"replier"`
+}
+*/
+
 // CreateCommentTableIfNotExists Creates a Contents Table If Not Exists
 func CreateCommentTableIfNotExists() {
 	sql := `CREATE TABLE IF NOT EXISTS comments(
@@ -63,7 +101,7 @@ func InsertReply(username string, replyTo int, text string) {
 	fmt.Println("Insert comment id:", lastInsertID, "(a reply)")
 }
 
-// QueryContentIDwithCommentID find the exact content for one of its comments
+// QueryContentIDwithCommentID 根据 commentID 得到对应的 content 的 contentID
 func QueryContentIDwithCommentID(commentID int) int {
 	var contentID int
 	row := DB.QueryRow("select content_id from comments where comment_id = ?", commentID)
@@ -71,91 +109,30 @@ func QueryContentIDwithCommentID(commentID int) int {
 	return contentID
 }
 
-/*
-type MiniUser struct {
-	Username  string `json:"username" form:"username"`
-	Bio       string `json:"bio" form:"bio"`
-	AvatarURL string `json:"avatar_url" form:"avatar_url"`
-}
-*/
-
-// Comment means only the direct comment of a content
-type Comment struct {
-	CommentID int      `json:"commentID" form:"commentID"`
-	ContentID int      `json:"contentID" form:"contentID"`
-	Text      string   `json:"text" form:"text"`
-	Time      int64    `json:"createTime" form:"createTime"`
-	Commenter MiniUser `json:"commenter" form:"commenter"`
-}
-
-// QueryCommentsWithContentID gets direct comments of a specified content
-func QueryCommentsWithContentID(contentID int) []Comment {
-	comments := make([]Comment, 0)
+// QueryRepliesWithCommentID 得到一条 comment 的全部回复
+func QueryRepliesWithCommentID(commentID int) []GeneralComment {
+	replies := make([]GeneralComment, 0)
 	rows, err := DB.Query(`select comment_id,content_id,reply_to,comment_text,create_time,username,bio,avatar_url
-		from comments,users where commenter_id = user_id and content_id = ?`, contentID)
-	if err != nil {
-		panic(err)
-	}
-
-	for rows.Next() {
-		var comment Comment
-		var nullableReplyTo sql.NullInt32
-		err = rows.Scan(&comment.CommentID, &comment.ContentID, &nullableReplyTo, &comment.Text, &comment.Time,
-			&comment.Commenter.Username, &comment.Commenter.Bio, &comment.Commenter.AvatarURL)
-		if err != nil {
-			panic(err)
-		}
-
-		// reply_to = NULL, 是条评论
-		if nullableReplyTo.Valid == false {
-			comments = append(comments, comment)
-		}
-	}
-	return comments
-}
-
-// Reply is a reply to a comment or another Reply
-type Reply struct {
-	CommentID int      `json:"commentID" form:"commentID"`
-	ReplyTo   int      `json:"replyTo" form:"replyTo"`
-	Text      string   `json:"text" form:"text"`
-	Time      int64    `json:"createTime" form:"createTime"`
-	Replier   MiniUser `json:"replier" form:"replier"`
-}
-
-// QueryRepliesWithCommentID gets the replies of a comment.
-func QueryRepliesWithCommentID(commentID int) []Reply {
-	replies := make([]Reply, 0)
-	rows, err := DB.Query(`select comment_id,reply_to,comment_text,create_time,username,bio,avatar_url
 		from comments,users where commenter_id=user_id and reply_to = ?`, commentID)
 	if err != nil {
 		panic(err)
 	}
 
 	for rows.Next() {
-		var reply Reply
-		err = rows.Scan(&reply.CommentID, &reply.ReplyTo, &reply.Text, &reply.Time, &reply.Replier.Username, &reply.Replier.Bio, &reply.Replier.AvatarURL)
+		var reply GeneralComment
+		err = rows.Scan(&reply.CommentID, &reply.ContentID, &reply.ReplyTo, &reply.Text, &reply.Time, &reply.Creator.Username, &reply.Creator.Bio, &reply.Creator.AvatarURL)
 		if err != nil {
 			panic(err)
 		}
+
+		reply.IsReply = true
 		replies = append(replies, reply)
 	}
 
 	return replies
 }
 
-// GeneralComment 可同时表示 Comment 或 Reply
-type GeneralComment struct {
-	CommentID int      `json:"commentID" form:"commentID"`
-	ContentID int      `json:"contentID" form:"contentID"`
-	IsReply   bool     `json:"isReply" form:"isReply"`
-	ReplyTo   int      `json:"replyTo" form:"replyTo"`
-	Text      string   `json:"text" form:"text"`
-	Time      int64    `json:"createTime" form:"createTime"`
-	Creator   MiniUser `json:"creator" form:"creator"`
-}
-
-//QueryCommentWithCommentID 根据 commentID 得到 GeneralComment
+//QueryCommentWithCommentID 根据 commentID 得到 comment
 func QueryCommentWithCommentID(commentID int) *GeneralComment {
 	comment := new(GeneralComment)
 	var nullableReplyTo sql.NullInt32
@@ -165,7 +142,7 @@ func QueryCommentWithCommentID(commentID int) *GeneralComment {
 	err := row.Scan(&comment.CommentID, &comment.ContentID, &nullableReplyTo, &comment.Text, &comment.Time,
 		&comment.Creator.Username, &comment.Creator.Bio, &comment.Creator.AvatarURL)
 	if err != nil {
-		panic(nil)
+		panic(err)
 	}
 
 	if nullableReplyTo.Valid {
@@ -179,6 +156,7 @@ func QueryCommentWithCommentID(commentID int) *GeneralComment {
 	return comment
 }
 
+// QueryAllCommentsWithContentID 根据 contentID 得到全部的 comment，包含 comment 的回复
 func QueryAllCommentsWithContentID(contentID int) []GeneralComment {
 	comments := make([]GeneralComment, 0)
 	rows, err := DB.Query(`select comment_id,content_id,reply_to,comment_text,create_time,username,bio,avatar_url
@@ -194,7 +172,7 @@ func QueryAllCommentsWithContentID(contentID int) []GeneralComment {
 		err = rows.Scan(&comment.CommentID, &comment.ContentID, &nullableReplyTo, &comment.Text, &comment.Time,
 			&comment.Creator.Username, &comment.Creator.Bio, &comment.Creator.AvatarURL)
 		if err != nil {
-			panic(nil)
+			panic(err)
 		}
 
 		if nullableReplyTo.Valid {
@@ -207,5 +185,33 @@ func QueryAllCommentsWithContentID(contentID int) []GeneralComment {
 		comments = append(comments, comment)
 	}
 
+	return comments
+}
+
+// QueryCommentsWithContentID 根据 contentID 得到 comment，不包含 comment 的回复
+func QueryCommentsWithContentID(contentID int) []GeneralComment {
+	comments := make([]GeneralComment, 0)
+	rows, err := DB.Query(`select comment_id,content_id,reply_to,comment_text,create_time,username,bio,avatar_url
+		from comments,users where commenter_id = user_id and content_id = ?`, contentID)
+	if err != nil {
+		panic(err)
+	}
+
+	for rows.Next() {
+		var comment GeneralComment
+		var nullableReplyTo sql.NullInt32
+		err = rows.Scan(&comment.CommentID, &comment.ContentID, &nullableReplyTo, &comment.Text, &comment.Time,
+			&comment.Creator.Username, &comment.Creator.Bio, &comment.Creator.AvatarURL)
+		if err != nil {
+			panic(err)
+		}
+
+		// reply_to = NULL, 是条评论
+		if nullableReplyTo.Valid == false {
+			comment.IsReply = false
+			comment.ReplyTo = 0
+			comments = append(comments, comment)
+		}
+	}
 	return comments
 }
