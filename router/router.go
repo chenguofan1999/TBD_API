@@ -46,17 +46,18 @@ func InitRouter() *gin.Engine {
 	router.GET("/comments/:commentID/replies", api.GetRepliesByCommentID)
 
 	// Following API based on current login user, please include a token in request header
-	router.PUT("/users/info/bio", api.UpdateUserBio)
-	router.PUT("/users/info/avatar", api.UpdateUserAvatar)
-	router.GET("/users", api.GetLoginUser)
-	router.PUT("/users/following/:username", api.FollowUser)
-	router.DELETE("/users/following/:username", api.UnfollowUser)
+	router.PUT("/user/info/bio", api.UpdateUserBio)
+	router.PUT("/user/info/avatar", api.UpdateUserAvatar)
+	router.GET("/user", api.GetLoginUser)
+	router.PUT("/user/following/:username", api.FollowUser)
+	router.DELETE("/user/following/:username", api.UnfollowUser)
+	router.GET("/user/following/:username", api.GetFollowStateByUsername)
 
 	router.POST("/contents", api.PostContent)
 	router.DELETE("/contents/:contentID", api.DeleteContent)
 
 	router.POST("/comments", api.PostComment)
-	router.POST("/replies", api.PostReply) // todo:
+	router.POST("/comments/:commentID/replies", api.PostReply) // todo:
 	router.DELETE("/comments/:commentID", api.DeleteComment)
 
 	router.PUT("contents/:contentID/like", api.LikeContentByContentID)

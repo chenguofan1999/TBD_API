@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"tbd/model"
+	"tbd/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -74,13 +75,11 @@ func PostContent(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "expected Form-data"})
 	}
 
-	imageNum := model.QueryMaxImageID()
 	imageURLs := make([]string, 0)
 	imageFiles := form.File["images"]
 
 	for _, file := range imageFiles {
-		imageNum++
-		filePath := fmt.Sprintf("static/images/%d-%s", imageNum, file.Filename)
+		filePath := fmt.Sprintf("static/images/%s", utils.GenerateRandomFileName(file.Filename))
 		imageURLs = append(imageURLs, filePath)
 		if err := c.SaveUploadedFile(file, filePath); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "upload error"})

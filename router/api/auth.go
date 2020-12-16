@@ -2,40 +2,40 @@ package api
 
 import (
 	//"fmt"
- 	"net/http"
+	"net/http"
 	"tbd/model"
 
-	"github.com/gin-gonic/gin"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gin-gonic/gin"
 )
 
 type LoginInfo struct {
-	Username  string `json:"username" form:"username"`
-	Password  string `json:"password" form:"password"`
+	Username string `json:"username" form:"username"`
+	Password string `json:"password" form:"password"`
 }
 
 func Login(c *gin.Context) {
-	var info LoginInfo 
+	var info LoginInfo
 	if err := c.ShouldBindJSON(&info); err != nil {
 		c.JSON(http.StatusOK, gin.H{
-			"token": "",
+			"token":  "",
 			"status": "failed",
 		})
-		return ;
+		return
 	}
-	
+
 	expected := model.QueryPasswordByName(info.Username)
-	if(expected != "" && info.Password == expected) {
+	if expected != "" && info.Password == expected {
 		tokenString := CreateTokenByName(info.Username)
 		c.JSON(http.StatusOK, gin.H{
-			"token": tokenString,
+			"token":  tokenString,
 			"status": "succeed",
 		})
 	} else {
-		c.JSON(http.StatusOK, gin.H{
-			"token": "", 
+		c.JSON(http.StatusForbidden, gin.H{
+			"token":  "",
 			"status": "failed",
-		})	
+		})
 	}
 }
 
@@ -43,22 +43,22 @@ func Login(c *gin.Context) {
 var serversecret = []byte("randomkey")
 
 // return "" if parse token failed
-func GetNameByToken(tokenString string) (string) {
+func GetNameByToken(tokenString string) string {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-  		return serversecret, nil
+		return serversecret, nil
 	})
 	if err == nil {
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 			if username, ok := claims["username"].(string); ok {
 				return username
-			} 
+			}
 		}
 	}
 	return ""
 }
 
 // return "" if create failed
-func CreateTokenByName(name string) (string) {
+func CreateTokenByName(name string) string {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"username": name,
 	})

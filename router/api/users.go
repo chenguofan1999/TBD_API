@@ -97,7 +97,7 @@ func UpdateUserAvatar(c *gin.Context) {
 	// 读取文件
 	imageFile, err := c.FormFile("avatar")
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "expected Form-data"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "expected Form-data: avatar"})
 	}
 
 	// 生成文件存储路径

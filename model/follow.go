@@ -30,7 +30,11 @@ func CreateFollowTableIfNotExists() {
 func InsertFollowRelation(followerID int, followedID int) error {
 	_, err := DB.Exec("insert INTO follow(follower_id,followed_id) values(?,?)", followerID, followedID)
 	if err != nil {
-		return errors.New("Target user not exists or duplicate follow")
+		return errors.New("No such user, or following already")
+	}
+
+	if followerID == followedID {
+		return errors.New("You can't follow yourself")
 	}
 
 	DB.Exec("update users set follower_num=follower_num+1 where user_id=?", followedID)
@@ -60,7 +64,7 @@ func DeleteFollowRelation(followerID int, followedID int) error {
 	}
 
 	if rowsAffected == 0 {
-		return errors.New("Target user not exists or duplicate operation")
+		return errors.New("No such user, or not following originally")
 	}
 
 	_, err = DB.Exec("update users set follower_num=follower_num-1 where user_id=?", followedID)
@@ -131,4 +135,29 @@ func QueryFollowingWithName(username string) []User {
 	}
 
 	return followers
+}
+
+func QueryHasFollowed(followerID int, followedID int) (bool, error) {
+	// check followerID valid
+	var temp int
+	row := DB.QueryRow("select user_id from users where user_id = ?", followerID)
+	err := row.Scan(&temp)
+	if err != nil {
+		return false, errors.New("no such user")
+	}
+
+	// check followedID valid
+	row = DB.QueryRow("select user_id from users where user_id = ?", followedID)
+	err = row.Scan(&temp)
+	if err != nil {
+		return false, errors.New("no such user")
+	}
+
+	row = DB.QueryRow("select 1 from follow where follower_id=? and followed_id=?", followerID, followedID)
+	err = row.Scan(&temp)
+	if err != nil {
+		return false, nil
+	}
+
+	return true, nil
 }

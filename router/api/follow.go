@@ -80,3 +80,40 @@ func UnfollowUser(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "success"})
 	}
 }
+
+func GetFollowStateByUsername(c *gin.Context) {
+	tokenString := c.Request.Header.Get("Authorization")
+	if tokenString == "" {
+		c.JSON(http.StatusOK, gin.H{"status": "unauthorized"})
+		return
+	}
+	loginUserName := GetNameByToken(tokenString)
+	userName := c.Param("username")
+
+	if loginUserName == userName {
+		c.JSON(http.StatusForbidden, gin.H{"error": "That's yourself"})
+	}
+
+	loginUserID := model.QueryUserIDWithName(loginUserName)
+	userID := model.QueryUserIDWithName(userName)
+
+	following, err := model.QueryHasFollowed(loginUserID, userID)
+	if err != nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+	}
+
+	followed, err := model.QueryHasFollowed(userID, loginUserID)
+	if err != nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+	}
+
+	if following && followed {
+		c.JSON(http.StatusOK, gin.H{"status": "Mutually following"})
+	} else if following {
+		c.JSON(http.StatusOK, gin.H{"status": "following"})
+	} else if followed {
+		c.JSON(http.StatusOK, gin.H{"status": "followed"})
+	} else {
+		c.JSON(http.StatusOK, gin.H{"status": "You didn't follow each other"})
+	}
+}

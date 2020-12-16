@@ -42,7 +42,7 @@ func InsertUser(username string, password string) error {
 
 	result, err := DB.Exec("insert INTO users(username,password) values(?,?)", username, password)
 	if err != nil {
-		fmt.Printf("Insert data failed,err:%v", err)
+		fmt.Printf("Insert user failed,err:%v", err)
 		return errors.New("User exists")
 	}
 	lastInsertID, err := result.LastInsertId() //获取插入数据的自增ID
@@ -50,7 +50,7 @@ func InsertUser(username string, password string) error {
 		fmt.Printf("Get insert id failed,err:%v", err)
 	}
 
-	fmt.Println("Insert data id:", lastInsertID)
+	fmt.Println("Insert user id:", lastInsertID)
 	return nil
 }
 

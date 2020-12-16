@@ -112,8 +112,7 @@ func PostComment(c *gin.Context) {
 }
 
 type postReplyFormat struct {
-	ReplyTo int    `json:"replyTo" form:"replyTo"`
-	Text    string `json:"text" form:"text"`
+	Text string `json:"text" form:"text"`
 }
 
 // PostReply : 当前用户发表一条回复(回复一条 Comment)
@@ -126,12 +125,13 @@ func PostReply(c *gin.Context) {
 	}
 	loginUserName := GetNameByToken(tokenString)
 
+	contentID, _ := strconv.Atoi(c.Param("contentID"))
 	var input postReplyFormat
 	if err := c.BindJSON(&input); err != nil {
 		c.JSON(http.StatusForbidden, gin.H{"error": "bind error"})
 		return
 	}
-	if err := model.InsertReply(loginUserName, input.ReplyTo, input.Text); err != nil {
+	if err := model.InsertReply(loginUserName, contentID, input.Text); err != nil {
 		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 		return
 	}
