@@ -74,23 +74,23 @@ func InsertContent(authorName string, title string, text string, imageURLs []str
 	return int(contentID), nil
 }
 
-func QueryContentsWithName(authorName string) []Content {
+func QueryContentsWithName(authorName string) ([]Content, error) {
 	contents := make([]Content, 0)
 	rows, err := DB.Query("select content_id,content_title,content_text,create_time,username,bio,avatar_url from contents,users where author_id = user_id and username = ?", authorName)
 	if err != nil {
-		panic(err)
+		return contents, err
 	}
 
 	for rows.Next() {
 		var content Content
 		err = rows.Scan(&content.ContentID, &content.Title, &content.Text, &content.Time, &content.Author.Username, &content.Author.Bio, &content.Author.AvatarURL)
 		if err != nil {
-			panic(err)
+			return contents, err
 		}
 
 		imageRows, err := DB.Query("select image_url from images where content_id = ?", content.ContentID)
 		if err != nil {
-			panic(err)
+			return contents, err
 		}
 
 		imageURLs := make([]string, 0)
@@ -98,7 +98,7 @@ func QueryContentsWithName(authorName string) []Content {
 			var imageURL string
 			err = imageRows.Scan(&imageURL)
 			if err != nil {
-				panic(err)
+				return contents, err
 			}
 
 			imageURLs = append(imageURLs, imageURL)
@@ -106,7 +106,7 @@ func QueryContentsWithName(authorName string) []Content {
 		content.Images = imageURLs
 		contents = append(contents, content)
 	}
-	return contents
+	return contents, nil
 }
 
 // QueryContentWithContentID Query a Content With ContentID

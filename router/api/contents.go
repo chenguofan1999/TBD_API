@@ -22,7 +22,14 @@ func GetContentsByName(c *gin.Context) {
 		return
 	}
 
-	contents := model.QueryContentsWithName(username)
+	contents, err := model.QueryContentsWithName(username)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "not found",
+		})
+		return
+	}
+
 	c.JSON(http.StatusOK, contents)
 }
 
@@ -69,7 +76,7 @@ func PostContent(c *gin.Context) {
 
 	imageNum := model.QueryMaxImageID()
 	imageURLs := make([]string, 0)
-	imageFiles := form.File["imageFiles"]
+	imageFiles := form.File["images"]
 
 	for _, file := range imageFiles {
 		imageNum++

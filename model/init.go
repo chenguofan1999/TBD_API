@@ -8,9 +8,11 @@ func init() {
 	CreateContentTableIfNotExists()
 	CreateImageTableIfNotExists()
 	CreateCommentTableIfNotExists()
+	CreateLikeTableIfNotExists()
 }
 
 func clearDB() {
+	DB.Exec("drop table likes")
 	DB.Exec("drop table comments")
 	DB.Exec("drop table images")
 	DB.Exec("drop table contents")

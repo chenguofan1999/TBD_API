@@ -30,18 +30,11 @@ func CreateFollowTableIfNotExists() {
 func InsertFollowRelation(followerID int, followedID int) error {
 	_, err := DB.Exec("insert INTO follow(follower_id,followed_id) values(?,?)", followerID, followedID)
 	if err != nil {
-		return errors.New("Target user not exists or duplicate operation")
+		return errors.New("Target user not exists or duplicate follow")
 	}
 
-	_, err = DB.Exec("update users set follower_num=follower_num+1 where user_id=?", followedID)
-	if err != nil {
-		return err
-	}
-
-	_, err = DB.Exec("update users set following_num=following_num+1 where user_id=?", followerID)
-	if err != nil {
-		return err
-	}
+	DB.Exec("update users set follower_num=follower_num+1 where user_id=?", followedID)
+	DB.Exec("update users set following_num=following_num+1 where user_id=?", followerID)
 
 	fmt.Println(followerID, "follows", followedID)
 	return nil
@@ -49,15 +42,8 @@ func InsertFollowRelation(followerID int, followedID int) error {
 
 // InsertFollowRelationByName : 用户名为 followerName 的用户 follow 用户名为 followedName 的用户
 func InsertFollowRelationByName(followerName string, followedName string) error {
-	var followerID int
-	var followedID int
-
-	row := DB.QueryRow("select user_id from users where username = ?", followerName)
-	row.Scan(&followerID)
-
-	row = DB.QueryRow("select user_id from users where username = ?", followedName)
-	row.Scan(&followedID)
-
+	followerID := QueryUserIDWithName(followerName)
+	followedID := QueryUserIDWithName(followedName)
 	return InsertFollowRelation(followerID, followedID)
 }
 
