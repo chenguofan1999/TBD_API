@@ -11,23 +11,21 @@ func Cors() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Expose-Headers", "Access-Control-Allow-Origin")
-        c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT")
 
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(204)
 			return
 		}
-
 		c.Next()
 	}
 }
 
-
 func InitRouter() *gin.Engine {
 	router := gin.Default()
 
-    router.Use(Cors())
+	router.Use(Cors())
 
 	router.StaticFS("/static", http.Dir("./static"))
 
@@ -36,8 +34,8 @@ func InitRouter() *gin.Engine {
 	router.GET("/users/:username/following", api.GetFollowingByName)
 	router.GET("/users/:username/likes", api.GetLikedContentsByName)
 
-	router.POST("/login", api.Login)
-	router.POST("/signup", api.CreateNewUser)
+	router.POST("/users/login", api.Login)
+	router.POST("/users/signup", api.CreateNewUser)
 
 	router.GET("/contents/:contentID", api.GetContentByContentID)
 	router.GET("/contents", api.GetContentsByName)
@@ -48,11 +46,11 @@ func InitRouter() *gin.Engine {
 	router.GET("/comments/:commentID/replies", api.GetRepliesByCommentID)
 
 	// Following API based on current login user, please include a token in request header
-	router.PUT("/user/info/bio", api.UpdateUserBio)
-	router.PUT("/user/info/avatar", api.UpdateUserAvatar)
-	router.GET("/user", api.GetLoginUser)
-	router.PUT("/user/following/:username", api.FollowUser)
-	router.DELETE("/user/following/:username", api.UnfollowUser)
+	router.PUT("/users/info/bio", api.UpdateUserBio)
+	router.PUT("/users/info/avatar", api.UpdateUserAvatar)
+	router.GET("/users", api.GetLoginUser)
+	router.PUT("/users/following/:username", api.FollowUser)
+	router.DELETE("/users/following/:username", api.UnfollowUser)
 
 	router.POST("/contents", api.PostContent)
 	router.DELETE("/contents/:contentID", api.DeleteContent)
@@ -64,6 +62,7 @@ func InitRouter() *gin.Engine {
 	router.PUT("contents/:contentID/like", api.LikeContentByContentID)
 	router.DELETE("contents/:contentID/like", api.CancelLikeContentByContentID)
 	router.GET("contents/:contentID/like", api.CheckLiked)
+
 	// router.POST("/user", Store)
 	// router.PUT("/user/:id", Update)
 	// router.DELETE("/user/:id", Destroy)

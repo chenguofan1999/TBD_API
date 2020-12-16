@@ -55,9 +55,9 @@ func FollowUser(c *gin.Context) {
 	}
 
 	if err := model.InsertFollowRelationByName(loginUserName, c.Param("username")); err != nil {
-		c.JSON(http.StatusForbidden, gin.H{"status": err.Error()})
+		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 	} else {
-		c.JSON(http.StatusOK, gin.H{"status": "success"})
+		c.JSON(http.StatusNoContent, gin.H{"status": "success"})
 	}
 }
 
@@ -65,7 +65,7 @@ func FollowUser(c *gin.Context) {
 func UnfollowUser(c *gin.Context) {
 	tokenString := c.Request.Header.Get("Authorization")
 	if tokenString == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"status": "unauthorized"})
+		c.JSON(http.StatusOK, gin.H{"status": "unauthorized"})
 		return
 	}
 	loginUserName := GetNameByToken(tokenString)
@@ -75,7 +75,7 @@ func UnfollowUser(c *gin.Context) {
 	}
 
 	if err := model.DeleteFollowRelationByName(loginUserName, c.Param("username")); err != nil {
-		c.JSON(http.StatusForbidden, gin.H{"status": err.Error()})
+		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 	} else {
 		c.JSON(http.StatusOK, gin.H{"status": "success"})
 	}

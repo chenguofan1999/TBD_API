@@ -10,7 +10,7 @@ import (
 func main() {
 	testData()
 	router := router.InitRouter()
-	router.Run(":8012")
+	router.Run(":5005")
 	// fmt.Println(model.QueryReplyWithID(5))
 	// fmt.Println(model.QueryAllCommentsWithContentID(2))
 }

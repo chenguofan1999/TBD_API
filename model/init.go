@@ -2,7 +2,7 @@ package model
 
 func init() {
 	Connect()
-	clearDB() // remove this when release
+	// clearDB() // remove this when release
 	CreateUserTableIfNotExists()
 	CreateFollowTableIfNotExists()
 	CreateContentTableIfNotExists()
