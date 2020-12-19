@@ -52,38 +52,14 @@ func DeleteLikeRelation(userID int, contentID int) error {
 }
 
 func QueryLikedContentsWithUserID(userID int) ([]Content, error) {
-	contents := make([]Content, 0)
-	rows, err := DB.Query("select contents.content_id,content_title,content_text,create_time,username,bio,avatar_url from likes,contents,users where likes.content_id = contents.content_id and author_id = users.user_id and likes.user_id = ?", userID)
+	fmt.Println("Querying liked contents with userID")
+
+	rows, err := DB.Query("select contents.content_id,content_title,content_text,create_time,username,bio,avatar_url from likes,contents,users where likes.content_id = contents.content_id and author_id = users.user_id and likes.user_id = ? order by create_time desc", userID)
 	if err != nil {
-		return contents, err
+		return []Content{}, err
 	}
 
-	for rows.Next() {
-		var content Content
-		err = rows.Scan(&content.ContentID, &content.Title, &content.Text, &content.Time, &content.Author.Username, &content.Author.Bio, &content.Author.AvatarURL)
-		if err != nil {
-			return contents, err
-		}
-
-		imageRows, err := DB.Query("select image_url from images where content_id = ?", content.ContentID)
-		if err != nil {
-			return contents, err
-		}
-
-		imageURLs := make([]string, 0)
-		for imageRows.Next() {
-			var imageURL string
-			err = imageRows.Scan(&imageURL)
-			if err != nil {
-				return contents, err
-			}
-
-			imageURLs = append(imageURLs, imageURL)
-		}
-		content.Images = imageURLs
-		contents = append(contents, content)
-	}
-	return contents, nil
+	return GetContentsFromRows(rows)
 }
 
 func QueryHasLiked(userID int, contentID int) (bool, error) {

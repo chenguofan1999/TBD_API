@@ -12,7 +12,7 @@ func Cors() gin.HandlerFunc {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Expose-Headers", "Access-Control-Allow-Origin")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
 
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(204)
@@ -38,7 +38,7 @@ func InitRouter() *gin.Engine {
 	router.POST("/users/signup", api.CreateNewUser)
 
 	router.GET("/contents/:contentID", api.GetContentByContentID)
-	router.GET("/contents", api.GetContentsByName)
+	router.GET("/contents", api.GetContentsByQuerys)
 
 	router.GET("/comments/:commentID", api.GetCommentByCommentID)
 	router.GET("/comments", api.GetCommentsByContentIDandFilter)

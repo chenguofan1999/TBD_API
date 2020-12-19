@@ -1,6 +1,7 @@
 package model
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"time"
@@ -75,38 +76,25 @@ func InsertContent(authorName string, title string, text string, imageURLs []str
 }
 
 func QueryContentsWithName(authorName string) ([]Content, error) {
-	contents := make([]Content, 0)
-	rows, err := DB.Query("select content_id,content_title,content_text,create_time,username,bio,avatar_url from contents,users where author_id = user_id and username = ?", authorName)
+	fmt.Println("Querying contents with name")
+
+	rows, err := DB.Query("select content_id,content_title,content_text,create_time,username,bio,avatar_url from contents,users where author_id = user_id and username = ? order by content_id desc", authorName)
 	if err != nil {
-		return contents, err
+		return []Content{}, err
 	}
 
-	for rows.Next() {
-		var content Content
-		err = rows.Scan(&content.ContentID, &content.Title, &content.Text, &content.Time, &content.Author.Username, &content.Author.Bio, &content.Author.AvatarURL)
-		if err != nil {
-			return contents, err
-		}
+	return GetContentsFromRows(rows)
+}
 
-		imageRows, err := DB.Query("select image_url from images where content_id = ?", content.ContentID)
-		if err != nil {
-			return contents, err
-		}
+func QueryPublicContents(num int) ([]Content, error) {
+	fmt.Println("Querying public contents")
 
-		imageURLs := make([]string, 0)
-		for imageRows.Next() {
-			var imageURL string
-			err = imageRows.Scan(&imageURL)
-			if err != nil {
-				return contents, err
-			}
-
-			imageURLs = append(imageURLs, imageURL)
-		}
-		content.Images = imageURLs
-		contents = append(contents, content)
+	rows, err := DB.Query("select content_id,content_title,content_text,create_time,username,bio,avatar_url from contents,users where author_id = user_id order by content_id desc limit ?", num)
+	if err != nil {
+		return []Content{}, err
 	}
-	return contents, nil
+
+	return GetContentsFromRows(rows)
 }
 
 // QueryContentWithContentID Query a Content With ContentID
@@ -145,4 +133,48 @@ func DeleteContentWithContentID(contentID int) error {
 		return errors.New("Content May Not Exist")
 	}
 	return nil
+}
+
+// GetContentsOfFollowingUsersWithUserID 获取指定ID的用户关注的用户的内容
+func GetContentsOfFollowingUsersWithUserID(userID int) ([]Content, error) {
+	fmt.Println("Querying contents of following users")
+
+	rows, err := DB.Query("select content_id,content_title,content_text,create_time,username,bio,avatar_url  from contents,users where author_id = user_id and author_id in (select followed_id from follow where follower_id = ?)", userID)
+	if err != nil {
+		return []Content{}, err
+	}
+
+	return GetContentsFromRows(rows)
+}
+
+// GetContentsFromRows 是一个辅助函数
+func GetContentsFromRows(rows *sql.Rows) ([]Content, error) {
+	contents := make([]Content, 0)
+
+	for rows.Next() {
+		var content Content
+		err := rows.Scan(&content.ContentID, &content.Title, &content.Text, &content.Time, &content.Author.Username, &content.Author.Bio, &content.Author.AvatarURL)
+		if err != nil {
+			return contents, err
+		}
+
+		imageRows, err := DB.Query("select image_url from images where content_id = ?", content.ContentID)
+		if err != nil {
+			return contents, err
+		}
+
+		imageURLs := make([]string, 0)
+		for imageRows.Next() {
+			var imageURL string
+			err = imageRows.Scan(&imageURL)
+			if err != nil {
+				return contents, err
+			}
+
+			imageURLs = append(imageURLs, imageURL)
+		}
+		content.Images = imageURLs
+		contents = append(contents, content)
+	}
+	return contents, nil
 }

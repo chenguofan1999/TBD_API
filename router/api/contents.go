@@ -10,9 +10,39 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// GetContentsByName 获取指定用户发表的所有content
-func GetContentsByName(c *gin.Context) {
+// GetContentsByQuerys 获取contents, 可选 query 项目:
+// type : 查询类型：user / public / mine / following
+// username : 查询用户内容时有效
+// num : 公共内容时有效，默认 20 条
+func GetContentsByQuerys(c *gin.Context) {
+	queryType := c.Query("type")
+	switch queryType {
+	case "user":
+		GetContentsByUserName(c)
+	case "public":
+		GetPublicContentsByNum(c)
+	case "mine":
+		GetMyContents(c)
+	case "following":
+		GetContentsOfMyFollowingUsers(c)
+	default:
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "BadRequest",
+		})
+		return
+	}
+
+}
+
+// GetContentsByUserName 获取某用户的全部内容
+func GetContentsByUserName(c *gin.Context) {
 	username := c.Query("username")
+	if username == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "BadRequest",
+		})
+		return
+	}
 
 	// 确定此用户存在
 	user := model.QueryUserWithName(username)
@@ -34,13 +64,44 @@ func GetContentsByName(c *gin.Context) {
 	c.JSON(http.StatusOK, contents)
 }
 
+// GetPublicContentsByNum 获取公共内容，query中用num表示条数
+func GetPublicContentsByNum(c *gin.Context) {
+	var number int
+	var err error
+	numStr := c.Query("num")
+	if numStr == "" {
+		number = 20
+	} else {
+		number, err = strconv.Atoi(numStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "BadRequest",
+			})
+			return
+		}
+	}
+
+	contents, err := model.QueryPublicContents(number)
+	if err != nil {
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "BadRequest",
+			})
+			return
+		}
+	}
+	c.JSON(http.StatusOK, contents)
+}
+
 // GetContentByContentID 根据 contentID 获取 content
 func GetContentByContentID(c *gin.Context) {
-	contentID64, err := strconv.ParseInt(c.Param("contentID"), 10, 32)
+	contentID, err := strconv.Atoi(c.Param("contentID"))
 	if err != nil {
-		panic(err)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "BadRequest",
+		})
+		return
 	}
-	contentID := int(contentID64)
 
 	content := model.QueryContentWithContentID(contentID)
 	if content == nil {
@@ -53,11 +114,55 @@ func GetContentByContentID(c *gin.Context) {
 	c.JSON(http.StatusOK, content)
 }
 
+// GetContentsOfMyFollowingUsers 获取当前用户关注者发布的内容
+func GetContentsOfMyFollowingUsers(c *gin.Context) {
+	// 得到登录用户名
+	tokenString := c.Request.Header.Get("Authorization")
+	if tokenString == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"status": "unauthorized"})
+		return
+	}
+	loginUserName := GetNameByToken(tokenString)
+	loginUserID := model.QueryUserIDWithName(loginUserName)
+
+	contents, err := model.GetContentsOfFollowingUsersWithUserID(loginUserID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "BadRequest",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, contents)
+}
+
+// GetMyContents 获取当前用户发布的内容
+func GetMyContents(c *gin.Context) {
+	// 得到登录用户名
+	tokenString := c.Request.Header.Get("Authorization")
+	if tokenString == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"status": "unauthorized"})
+		return
+	}
+	loginUserName := GetNameByToken(tokenString)
+
+	contents, err := model.QueryContentsWithName(loginUserName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "BadRequest",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, contents)
+}
+
 type TextContent struct {
 	Title string `json:"title" form:"title"`
 	Text  string `json:"text" form:"text"`
 }
 
+// PostContent 发布内容
 func PostContent(c *gin.Context) {
 	// 得到登录用户名
 	tokenString := c.Request.Header.Get("Authorization")
@@ -80,6 +185,7 @@ func PostContent(c *gin.Context) {
 
 	for _, file := range imageFiles {
 		filePath := fmt.Sprintf("static/images/%s", utils.GenerateRandomFileName(file.Filename))
+
 		imageURLs = append(imageURLs, filePath)
 		if err := c.SaveUploadedFile(file, filePath); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "upload error"})
