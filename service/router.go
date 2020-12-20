@@ -29,14 +29,16 @@ func InitRouter() *gin.Engine {
 
 	router.StaticFS("/static", http.Dir("./static"))
 
+	router.GET("", api.GetBriefAPI)
+
 	router.GET("/users/:username", api.GetUserInfoByName)
 	router.GET("/users/:username/followers", api.GetFollowersByName)
 	router.GET("/users/:username/following", api.GetFollowingByName)
-	router.GET("/users/:username/likes", api.GetLikedContentsByName)
 
 	router.POST("/users/login", api.Login)
 	router.POST("/users/signup", api.CreateNewUser)
 
+	router.GET("/users/:username/likes", api.GetLikedContentsByName)
 	router.GET("/contents/:contentID", api.GetContentByContentID)
 	router.GET("/contents", api.GetContentsByQuerys)
 

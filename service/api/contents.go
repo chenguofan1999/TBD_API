@@ -12,15 +12,16 @@ import (
 
 // GetContentsByQuerys 获取contents, 可选 query 项目:
 // type : 查询类型：user / public / mine / following / like
-// username : 查询用户内容、like时有效
-// num : 公共内容时有效，默认 20 条
+// username : type = user / like 时有效
+// page : type = public 时有效，第几页, 默认1
+// perPage : type = public 时有效， 默认15
 func GetContentsByQuerys(c *gin.Context) {
 	queryType := c.Query("type")
 	switch queryType {
 	case "user":
 		GetContentsByUserName(c)
 	case "public":
-		GetPublicContentsByNum(c)
+		GetPublicContents(c)
 	case "mine":
 		GetMyContents(c)
 	case "following":
@@ -66,15 +67,18 @@ func GetContentsByUserName(c *gin.Context) {
 	c.JSON(http.StatusOK, contents)
 }
 
-// GetPublicContentsByNum 获取公共内容，query中用num表示条数
-func GetPublicContentsByNum(c *gin.Context) {
-	var number int
+// GetPublicContents 获取公共内容
+func GetPublicContents(c *gin.Context) {
+	var perPage int // 默认为 15
+	var page int    // 默认为 1
 	var err error
-	numStr := c.Query("num")
-	if numStr == "" {
-		number = 20
+
+	// get page
+	pageStr := c.Query("page")
+	if pageStr == "" {
+		page = 1
 	} else {
-		number, err = strconv.Atoi(numStr)
+		page, err = strconv.Atoi(pageStr)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": "BadRequest",
@@ -83,7 +87,23 @@ func GetPublicContentsByNum(c *gin.Context) {
 		}
 	}
 
-	contents, err := model.QueryPublicContents(number)
+	// get perPage
+	perPageStr := c.Query("perPage")
+	if perPageStr == "" {
+		perPage = 15
+	} else {
+		perPage, err = strconv.Atoi(perPageStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "BadRequest",
+			})
+			return
+		}
+	}
+
+	start := (page - 1) * perPage
+
+	contents, err := model.QueryPublicContents(start, perPage)
 	if err != nil {
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{

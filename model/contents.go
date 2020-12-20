@@ -86,10 +86,10 @@ func QueryContentsWithName(authorName string) ([]Content, error) {
 	return GetContentsFromRows(rows)
 }
 
-func QueryPublicContents(num int) ([]Content, error) {
+func QueryPublicContents(start int, num int) ([]Content, error) {
 	fmt.Println("Querying public contents")
 
-	rows, err := DB.Query("select content_id,content_title,content_text,create_time,username,bio,avatar_url from contents,users where author_id = user_id order by content_id desc limit ?", num)
+	rows, err := DB.Query("select content_id,content_title,content_text,create_time,username,bio,avatar_url from contents,users where author_id = user_id order by content_id desc limit ?,?", start, num)
 	if err != nil {
 		return []Content{}, err
 	}
