@@ -10,7 +10,7 @@ import (
 //数据库连接信息
 const (
 	USERNAME = "root"
-	PASSWORD = "Dl_980707"
+	PASSWORD = "Tbd_2333"
 	DATABASE = "tbd"
 )
 
