@@ -11,8 +11,8 @@ import (
 )
 
 // GetContentsByQuerys 获取contents, 可选 query 项目:
-// type : 查询类型：user / public / mine / following
-// username : 查询用户内容时有效
+// type : 查询类型：user / public / mine / following / like
+// username : 查询用户内容、like时有效
 // num : 公共内容时有效，默认 20 条
 func GetContentsByQuerys(c *gin.Context) {
 	queryType := c.Query("type")
@@ -25,6 +25,8 @@ func GetContentsByQuerys(c *gin.Context) {
 		GetMyContents(c)
 	case "following":
 		GetContentsOfMyFollowingUsers(c)
+	case "like":
+		GetLikedContentsByName(c)
 	default:
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "BadRequest",
@@ -227,7 +229,7 @@ func DeleteContent(c *gin.Context) {
 	// 验证 content 是否存在，存在即获取
 	content := model.QueryContentWithContentID(contentID)
 	if content == nil {
-		c.JSON(http.StatusNotFound, gin.H{"status": "Bad Request"})
+		c.JSON(http.StatusNotFound, gin.H{"status": "Content not exist"})
 		return
 	}
 

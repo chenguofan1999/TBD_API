@@ -104,12 +104,12 @@ func QueryContentWithContentID(contentID int) *Content {
 
 	err := row.Scan(&content.ContentID, &content.Title, &content.Text, &content.Time, &content.Author.Username, &content.Author.Bio, &content.Author.AvatarURL)
 	if err != nil {
-		panic(err)
+		return nil
 	}
 
 	imageRows, err := DB.Query("select image_url from images where content_id = ?", contentID)
 	if err != nil {
-		panic(err)
+		return nil
 	}
 
 	imageURLs := make([]string, 0)
@@ -117,7 +117,7 @@ func QueryContentWithContentID(contentID int) *Content {
 		var imageURL string
 		err = imageRows.Scan(&imageURL)
 		if err != nil {
-			panic(err)
+			return nil
 		}
 
 		imageURLs = append(imageURLs, imageURL)
@@ -128,10 +128,21 @@ func QueryContentWithContentID(contentID int) *Content {
 
 // DeleteContentWithContentID 删除一条内容，级联删除其所有评论
 func DeleteContentWithContentID(contentID int) error {
-	_, err := DB.Exec(`delete from contents where content_id = ?`, contentID)
+	result, err := DB.Exec(`delete from contents where content_id = ?`, contentID)
 	if err != nil {
-		return errors.New("Content May Not Exist")
+		return errors.New("Delete error")
 	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return errors.New("Delete error")
+	}
+
+	if rowsAffected == 0 {
+		return errors.New("Content not exist")
+	}
+
+	// DB.Exec(`delete from images where content_id = ?`, contentID)
 	return nil
 }
 
@@ -139,7 +150,7 @@ func DeleteContentWithContentID(contentID int) error {
 func GetContentsOfFollowingUsersWithUserID(userID int) ([]Content, error) {
 	fmt.Println("Querying contents of following users")
 
-	rows, err := DB.Query("select content_id,content_title,content_text,create_time,username,bio,avatar_url  from contents,users where author_id = user_id and author_id in (select followed_id from follow where follower_id = ?)", userID)
+	rows, err := DB.Query("select content_id,content_title,content_text,create_time,username,bio,avatar_url  from contents,users where author_id = user_id and author_id in (select followed_id from follow where follower_id = ?) order by content_id desc ", userID)
 	if err != nil {
 		return []Content{}, err
 	}

@@ -92,6 +92,7 @@ func GetFollowStateByUsername(c *gin.Context) {
 
 	if loginUserName == userName {
 		c.JSON(http.StatusForbidden, gin.H{"error": "That's yourself"})
+		return
 	}
 
 	loginUserID := model.QueryUserIDWithName(loginUserName)
@@ -100,11 +101,13 @@ func GetFollowStateByUsername(c *gin.Context) {
 	following, err := model.QueryHasFollowed(loginUserID, userID)
 	if err != nil {
 		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		return
 	}
 
 	followed, err := model.QueryHasFollowed(userID, loginUserID)
 	if err != nil {
 		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+		return
 	}
 
 	if following && followed {
