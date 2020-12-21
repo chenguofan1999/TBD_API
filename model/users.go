@@ -86,22 +86,10 @@ func QueryUserIDWithName(username string) int {
 	return userID
 }
 
-func UpdateBio(userID int, newBio string) error {
-	result, _ := DB.Exec("update users set bio = ? where user_id = ?", newBio, userID)
-
-	rowsAffected, _ := result.RowsAffected()
-	if rowsAffected == 0 {
-		return errors.New("user may not exist")
-	}
-	return nil
+func UpdateBio(userID int, newBio string) {
+	DB.Exec("update users set bio = ? where user_id = ?", newBio, userID)
 }
 
-func UpdateAvatar(userID int, newAvatarURL string) error {
-	result, _ := DB.Exec("update users set avatar_url = ? where user_id = ?", newAvatarURL, userID)
-
-	rowsAffected, _ := result.RowsAffected()
-	if rowsAffected == 0 {
-		return errors.New("user may not exist")
-	}
-	return nil
+func UpdateAvatar(userID int, newAvatarURL string) {
+	DB.Exec("update users set avatar_url = ? where user_id = ?", newAvatarURL, userID)
 }

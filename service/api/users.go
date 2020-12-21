@@ -69,6 +69,11 @@ func UpdateUserBio(c *gin.Context) {
 	loginUserName := GetNameByToken(tokenString)
 	userID := model.QueryUserIDWithName(loginUserName)
 
+	if userID == 0 {
+		c.JSON(http.StatusForbidden, gin.H{"error": "user not exist"})
+		return
+	}
+
 	// 获取 JSON 中的参数
 	var info bioInfo
 	if err := c.BindJSON(&info); err != nil {
@@ -76,10 +81,7 @@ func UpdateUserBio(c *gin.Context) {
 		return
 	}
 
-	if err := model.UpdateBio(userID, info.Bio); err != nil {
-		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
-		return
-	}
+	model.UpdateBio(userID, info.Bio)
 
 	c.JSON(http.StatusOK, gin.H{"status": "success"})
 }
@@ -93,6 +95,11 @@ func UpdateUserAvatar(c *gin.Context) {
 	}
 	loginUserName := GetNameByToken(tokenString)
 	userID := model.QueryUserIDWithName(loginUserName)
+
+	if userID == 0 {
+		c.JSON(http.StatusForbidden, gin.H{"error": "user not exist"})
+		return
+	}
 
 	// 读取文件
 	imageFile, err := c.FormFile("avatar")
@@ -110,10 +117,7 @@ func UpdateUserAvatar(c *gin.Context) {
 	}
 
 	// 更新 UserInfo
-	if err = model.UpdateAvatar(userID, filePath); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+	model.UpdateAvatar(userID, filePath)
 
 	c.JSON(http.StatusOK, gin.H{"status": "success"})
 }
